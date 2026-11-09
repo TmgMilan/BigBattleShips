@@ -39,4 +39,8 @@ public class SessionManager {
     
     return code;
   }
+
+  public synchronized void removeSession(String code){
+    sessions.remove(code);
+  }
 } 

@@ -24,4 +24,19 @@ public class GameSession {
   public void addGuest(ClientHandler guest){
     this.guest = guest;
   }
+
+  public String getCode(){
+    return code;
+  }
+
+  public ClientHandler getHost(){
+    return host;
+  }
+
+  public ClientHandler opponentOf(ClientHandler client){
+    if (client == host){
+      return guest;
+    }
+    return host;
+  }
 }

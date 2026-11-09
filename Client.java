@@ -29,7 +29,7 @@ public class Client {
           String message;
 
           while((message = reader.readLine()) != null){
-            System.out.println("Server" + message);
+            System.out.println("Server " + message);
           }
         } catch (IOException e) {
           System.out.println("Disconnected FRom server");

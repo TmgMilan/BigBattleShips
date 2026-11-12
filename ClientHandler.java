@@ -36,8 +36,8 @@ public class ClientHandler implements Runnable {
             send(Message.of(Protocol.PONG));
           } else if (session == null){
             handleLobbyMessage(msg);
-          } else {
-            send(Message.of(Protocol.ERROR));
+          } else if (session != null) {
+            session.handle(this, msg);
           }
         } catch (IllegalArgumentException e){
           send(Message.of(Protocol.ERROR));

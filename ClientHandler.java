@@ -67,11 +67,7 @@ public class ClientHandler implements Runnable {
       String code = msg.get(0);
       session = sessionManager.joinSession(code, this);
 
-      if (session != null){
-        send(Message.of(Protocol.OPPONENT_JOINED));
-        session.getHost().send(Message.of(Protocol.OPPONENT_JOINED));
-      }
-      else {
+      if (session == null){
         send(Message.of(Protocol.ERROR));
       }
 

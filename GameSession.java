@@ -59,6 +59,8 @@ public class GameSession {
       handleReady(from);
     } else if (phase == GamePhase.SHIP_PLACEMENT && msg.is(Protocol.PLACE_FLEET)){
       handleFleet(from, msg);
+    } else if (phase == GamePhase.ATTACK && msg.is(Protocol.ATTACK)){
+      handleAttack(from, msg);
     } else {
       from.send(Message.of(Protocol.ERROR));
     }
@@ -128,23 +130,98 @@ public class GameSession {
     from.send(Message.of(Protocol.FLEET_OK));
 
     if (hostPlayer.getGrid().allShipsPlaced() && guestPlayer.getGrid().allShipsPlaced()) {
+        phase = GamePhase.ATTACK;
         state.setPhase(GamePhase.ATTACK);
         host.send(Message.of(Protocol.PHASE, GamePhase.ATTACK.name()));
         guest.send(Message.of(Protocol.PHASE, GamePhase.ATTACK.name()));
         state.selectStartingPlayer();
-        // TODO: startTurn() not implemented yet
-        // startTurn();
+        startTurn();
     }
   }
 
 
-    private Player playerFor(ClientHandler client) {
-        if (client == host) {
-            return hostPlayer;
-        }
-        if (client == guest) {
-            return guestPlayer;
-        }
-        return null;
+  private void handleAttack(ClientHandler from, Message msg){
+    if (!(state.getCurrentPlayer() == playerFor(from))){
+      from.send(Message.of(Protocol.ERROR, "Not your turn"));
+      return;
     }
+    if (msg.size() != 2){
+      from.send(Message.of(Protocol.ERROR, "Wrong number of arguments"));
+      return;
+    }
+    int row, col;
+    try {
+      row = msg.getInt(0);
+      col = msg.getInt(1);
+    } catch (NumberFormatException e){
+      from.send(Message.of(Protocol.ERROR, "Invalid row or column"));
+      return;
+    }
+
+    if (row > 9 || row < 0 || col > 9 || col < 0){
+      from.send(Message.of(Protocol.ERROR, "Invalid row or column"));
+      return;
+    }
+    Player opponent = playerFor(opponentOf(from));
+    if (opponent.getGrid().isAlreadyAttacked(row, col)){
+      from.send(Message.of(Protocol.ERROR, "ALREADY ATTACKED"));
+      return;
+    }
+
+    AttackResult result = opponent.getGrid().receiveAttack(row, col);
+
+    String hits = Protocol.encodeCells(result.getHits());
+    String misses = Protocol.encodeCells(result.getMisses());
+    String sunk = result.isShipDestroyed() ? "SUNK" : "NONE";
+
+    from.send(Message.of(Protocol.RESULT, "YOU", hits, misses, sunk));
+    handlerFor(opponent).send(Message.of(Protocol.RESULT, "OPPONENT", hits, misses, sunk));
+
+    if (!opponent.hasShipsRemaining()) {
+      endGame(playerFor(from));
+      return;
+    } 
+
+    state.switchTurn();
+    startTurn();
+  }
+
+
+  private Player playerFor(ClientHandler client) {
+      if (client == host) {
+          return hostPlayer;
+      }
+      if (client == guest) {
+          return guestPlayer;
+      }
+      return null;
+  }
+  
+  private ClientHandler handlerFor(Player player){
+    if (player == hostPlayer){
+      return host;
+    }
+    else if (player == guestPlayer){
+      return guest;
+    }
+    return null;
+  }
+
+
+  private void startTurn() {
+    ClientHandler current = handlerFor(state.getCurrentPlayer());
+    ClientHandler opponent = opponentOf(current);
+
+    current.send(Message.of(Protocol.TURN, "YOU"));
+    opponent.send(Message.of(Protocol.TURN, "OPPONENT"));
+  }
+
+  private void endGame(Player winner) {
+    state.declareWinner(winner);
+    ended = true;
+
+    ClientHandler winnerHandler = handlerFor(winner);
+    winnerHandler.send(Message.of(Protocol.GAME_OVER, "WIN"));
+    opponentOf(winnerHandler).send(Message.of(Protocol.GAME_OVER, "LOSE"));
+  }
 }

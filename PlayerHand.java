@@ -13,6 +13,15 @@ public class PlayerHand {
         return cards.contains(c);
     }
 
+    public Card getCard(int cardId) {
+        for (Card c : cards) {
+            if (c.getCardId() == cardId) {
+                return c;
+            }
+        }
+        return null;
+    }
+
     public boolean isEmpty() {
         return cards.isEmpty();
     }

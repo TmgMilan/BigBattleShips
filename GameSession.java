@@ -15,6 +15,7 @@ public class GameSession {
   private Player guestPlayer;
   private GameState state;
   private final ServerLogic logic = new ServerLogic();
+  private final Deck deck = new Deck();
 
   public GameSession (String code, ClientHandler host){
     this.host = host;
@@ -141,41 +142,76 @@ public class GameSession {
 
 
   private void handleAttack(ClientHandler from, Message msg){
-    if (!(state.getCurrentPlayer() == playerFor(from))){
+    Player attacker = playerFor(from);
+    if (!(state.getCurrentPlayer() == attacker)){
       from.send(Message.of(Protocol.ERROR, "Not your turn"));
       return;
     }
-    if (msg.size() != 2){
+    if (msg.size() != 3){
       from.send(Message.of(Protocol.ERROR, "Wrong number of arguments"));
       return;
     }
-    int row, col;
+    int cardID, row, col;
     try {
-      row = msg.getInt(0);
-      col = msg.getInt(1);
+      cardID = msg.getInt(0);
+      row = msg.getInt(1);
+      col = msg.getInt(2);
     } catch (NumberFormatException e){
       from.send(Message.of(Protocol.ERROR, "Invalid row or column"));
       return;
     }
 
-    if (row > 9 || row < 0 || col > 9 || col < 0){
+    if (!inBounds(row, col)){
       from.send(Message.of(Protocol.ERROR, "Invalid row or column"));
       return;
     }
+
     Player opponent = playerFor(opponentOf(from));
-    if (opponent.getGrid().isAlreadyAttacked(row, col)){
+
+    Grid targetGrid = opponent.getGrid();
+    Card card = attacker.getHand().getCard(cardID);
+
+    if (card == null){
+      from.send(Message.of(Protocol.ERROR, "You don't have that card"));
+      return;
+    }
+
+    if (!card.meetsUsageConditions(targetGrid)){
+      from.send(Message.of(Protocol.ERROR, "Can't play that card right now"));
+      return;
+    }
+
+    List<int[]> targets = new ArrayList<>();
+    for (int[] cell : card.getTargetCells(row, col)){
+      if (inBounds(cell[0], cell[1]) && !targetGrid.isAlreadyAttacked(cell[0], cell[1])){
+        targets.add(cell);
+      }
+    }
+    if (targets.isEmpty()){
       from.send(Message.of(Protocol.ERROR, "ALREADY ATTACKED"));
       return;
     }
 
-    AttackResult result = opponent.getGrid().receiveAttack(row, col);
+    attacker.playCard(card, row, col);
 
-    String hits = Protocol.encodeCells(result.getHits());
-    String misses = Protocol.encodeCells(result.getMisses());
-    String sunk = result.isShipDestroyed() ? "SUNK" : "NONE";
+    List<int[]> hits = new ArrayList<>();
+    List<int[]> misses = new ArrayList<>();
+    boolean sunkAny = false;
+    for (int[] cell : targets){
+      AttackResult result = targetGrid.receiveAttack(cell[0], cell[1]);
+      hits.addAll(result.getHits());
+      misses.addAll(result.getMisses());
+      if (result.isShipDestroyed()){
+        sunkAny = true;
+      }
+    }
 
-    from.send(Message.of(Protocol.RESULT, "YOU", hits, misses, sunk));
-    handlerFor(opponent).send(Message.of(Protocol.RESULT, "OPPONENT", hits, misses, sunk));
+    String hitText = Protocol.encodeCells(hits);
+    String missText = Protocol.encodeCells(misses);
+    String sunk = sunkAny ? "SUNK" : "NONE";
+
+    from.send(Message.of(Protocol.RESULT, "YOU", hitText, missText, sunk));
+    handlerFor(opponent).send(Message.of(Protocol.RESULT, "OPPONENT", hitText, missText, sunk));
 
     if (!opponent.hasShipsRemaining()) {
       endGame(playerFor(from));
@@ -209,19 +245,41 @@ public class GameSession {
 
 
   private void startTurn() {
-    ClientHandler current = handlerFor(state.getCurrentPlayer());
+    Player currPlayer = state.getCurrentPlayer();
+    currPlayer.setHand(deck.dealHand());
+
+    ClientHandler current = handlerFor(currPlayer);
     ClientHandler opponent = opponentOf(current);
 
     current.send(Message.of(Protocol.TURN, "YOU"));
+    current.send(Message.of(Protocol.CARDS, cardIds(currPlayer.getHand())));
     opponent.send(Message.of(Protocol.TURN, "OPPONENT"));
   }
 
   private void endGame(Player winner) {
     state.declareWinner(winner);
+    phase = GamePhase.GAME_OVER;
     ended = true;
 
     ClientHandler winnerHandler = handlerFor(winner);
     winnerHandler.send(Message.of(Protocol.GAME_OVER, "WIN"));
     opponentOf(winnerHandler).send(Message.of(Protocol.GAME_OVER, "LOSE"));
+
+    host.leaveSession();
+    guest.leaveSession();
+  }
+
+
+  private boolean inBounds(int row, int col){
+    return row >= 0 && row < 10 && col >= 0 && col < 10;
+  }
+
+  private String[] cardIds(PlayerHand hand){
+    List<Card> cards = hand.getCards();
+    String[] ids = new String[cards.size()];
+    for (int i = 0; i < cards.size(); i++){
+      ids[i] = String.valueOf(cards.get(i).getCardId());
+    }
+    return ids;
   }
 }

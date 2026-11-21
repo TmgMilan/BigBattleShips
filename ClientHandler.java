@@ -37,7 +37,11 @@ public class ClientHandler implements Runnable {
           } else if (session == null){
             handleLobbyMessage(msg);
           } else if (session != null) {
+            GameSession curr = session;
             session.handle(this, msg);
+            if (curr.isEnded()) {
+              sessionManager.removeSession(curr.getCode());
+            }
           }
         } catch (IllegalArgumentException e){
           send(Message.of(Protocol.ERROR));

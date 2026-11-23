@@ -18,6 +18,18 @@ public class RowStrikeCard extends Card {
 
     @Override
     public boolean meetsUsageConditions(Grid grid) {
+        for (int r = 0; r < 10; r++) {
+            boolean rowAttacked = false;
+            for (int c = 0; c < 10; c++) {
+                if (grid.isAlreadyAttacked(r, c)) {
+                    rowAttacked = true;
+                    break;
+                }
+            }
+            if (!rowAttacked) {
+                return false;
+            }
+        }
         return true;
     }
 }

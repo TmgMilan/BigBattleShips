@@ -17,6 +17,18 @@ public class ColumnStrikeCard extends Card {
 
     @Override
     public boolean meetsUsageConditions(Grid grid) {
+        for (int c = 0; c < 10; c++) {
+            boolean columnAttacked = false;
+            for (int r = 0; r < 10; r++) {
+                if (grid.isAlreadyAttacked(r, c)) {
+                    columnAttacked = true;
+                    break;
+                }
+            }
+            if (!columnAttacked) {
+                return false;
+            }
+        }
         return true;
     }
 }

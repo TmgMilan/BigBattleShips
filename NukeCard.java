@@ -21,6 +21,11 @@ public class NukeCard extends Card {
     }
 
     @Override
+    public String getDescription() {
+        return "Hits a 3x3 square centred on the cell you pick. Only usable once at least 20 cells on the enemy grid have been attacked.";
+    }
+
+    @Override
     public boolean meetsUsageConditions(Grid grid) {
         int attacked = 0;
         for (int r = 0; r < 10; r++) {

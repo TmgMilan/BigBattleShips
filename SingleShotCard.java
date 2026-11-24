@@ -12,6 +12,11 @@ public class SingleShotCard extends Card {
     }
 
     @Override
+    public String getDescription() {
+        return "Fires at the one cell you pick.";
+    }
+
+    @Override
     public boolean meetsUsageConditions(Grid grid) {
         return true;
     }

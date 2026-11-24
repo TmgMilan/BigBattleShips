@@ -20,7 +20,7 @@ public class Deck {
         return hand;
     }
 
-    private Card createCard(int id) {
+    public static Card createCard(int id) {
         switch (id) {
             case 0: return new SingleShotCard();
             case 1: return new RowStrikeCard();

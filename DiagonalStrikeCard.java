@@ -18,6 +18,11 @@ public class DiagonalStrikeCard extends Card {
     }
 
     @Override
+    public String getDescription() {
+        return "Hits an X shape: the cell you pick plus its four diagonal neighbours.";
+    }
+
+    @Override
     public boolean meetsUsageConditions(Grid grid) {
         return true;
     }

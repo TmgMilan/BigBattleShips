@@ -12,11 +12,18 @@ public abstract class Card {
 
     public abstract boolean meetsUsageConditions(Grid grid);
 
+    // plain-English explanation of what the card hits, shown to the player
+    public abstract String getDescription();
+
     public void markUsed() {
         used = true;
     }
 
     public int getCardId() {
         return cardId;
+    }
+
+    public String getName() {
+        return name;
     }
 }

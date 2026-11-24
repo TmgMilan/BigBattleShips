@@ -18,6 +18,11 @@ public class CrossStrikeCard extends Card {
     }
 
     @Override
+    public String getDescription() {
+        return "Hits a + shape: the cell you pick plus the cells above, below, left and right of it.";
+    }
+
+    @Override
     public boolean meetsUsageConditions(Grid grid) {
         return true;
     }

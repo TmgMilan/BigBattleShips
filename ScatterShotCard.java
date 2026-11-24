@@ -22,6 +22,11 @@ public class ScatterShotCard extends Card {
     }
 
     @Override
+    public String getDescription() {
+        return "Fires at the cell you pick plus 2 extra shots at random cells.";
+    }
+
+    @Override
     public boolean meetsUsageConditions(Grid grid) {
         return true;
     }

@@ -16,6 +16,11 @@ public class HorizontalTripleCard extends Card {
     }
 
     @Override
+    public String getDescription() {
+        return "Hits 3 cells in a row: the cell you pick plus the cells to its left and right.";
+    }
+
+    @Override
     public boolean meetsUsageConditions(Grid grid) {
         return true;
     }

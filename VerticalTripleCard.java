@@ -16,6 +16,11 @@ public class VerticalTripleCard extends Card {
     }
 
     @Override
+    public String getDescription() {
+        return "Hits 3 cells in a column: the cell you pick plus the cells above and below it.";
+    }
+
+    @Override
     public boolean meetsUsageConditions(Grid grid) {
         return true;
     }

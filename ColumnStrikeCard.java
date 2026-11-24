@@ -16,6 +16,11 @@ public class ColumnStrikeCard extends Card {
     }
 
     @Override
+    public String getDescription() {
+        return "Hits every cell in the column you pick (row is ignored). Only usable once every column on the enemy grid has been attacked at least once.";
+    }
+
+    @Override
     public boolean meetsUsageConditions(Grid grid) {
         for (int c = 0; c < 10; c++) {
             boolean columnAttacked = false;

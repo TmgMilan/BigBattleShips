@@ -17,6 +17,11 @@ public class RowStrikeCard extends Card {
     }
 
     @Override
+    public String getDescription() {
+        return "Hits every cell in the row you pick (col is ignored). Only usable once every row on the enemy grid has been attacked at least once.";
+    }
+
+    @Override
     public boolean meetsUsageConditions(Grid grid) {
         for (int r = 0; r < 10; r++) {
             boolean rowAttacked = false;

@@ -284,13 +284,24 @@ public class UIController extends Application implements GameEventListener {
         for (int id : hand) {
             String name = id < CARDS.length ? CARDS[id][0] : "Card " + id;
             String info = id < CARDS.length ? "Hits " + CARDS[id][1] : "";
-            ToggleButton card = new ToggleButton(name);
+            // Show the card's name and what it hits on the card itself
+            Label nameLabel = new Label(name);
+            Label infoLabel = new Label(info);
+            infoLabel.setWrapText(true);
+            VBox face = new VBox(4, nameLabel, infoLabel);
+            face.setAlignment(Pos.TOP_LEFT);
+            styleCardText(nameLabel, infoLabel, false);
+
+            ToggleButton card = new ToggleButton();
+            card.setGraphic(face);
             card.setToggleGroup(group);
             card.setTooltip(new Tooltip(info));
-            card.setPrefSize(150, 56);
+            card.setPrefSize(190, 90);
+            card.setAlignment(Pos.TOP_LEFT);
             card.setStyle(cardStyle(false));
             card.selectedProperty().addListener((obs, was, selected) -> {
                 card.setStyle(cardStyle(selected));
+                styleCardText(nameLabel, infoLabel, selected);
                 if (selected) {
                     selectedCard = id;
                     setStatus(name + ": " + info + ". Now click a cell in enemy waters.");
@@ -456,6 +467,13 @@ public class UIController extends Application implements GameEventListener {
         return "-fx-background-color: " + (selected ? ACCENT : PANEL) + "; -fx-text-fill: " + (selected ? BG : TEXT)
             + "; -fx-border-color: " + ACCENT + "; -fx-border-radius: 6; -fx-background-radius: 6;"
             + "-fx-font-size: 13px; -fx-font-weight: bold;";
+    }
+
+    // Card text colours flip when the card is selected (dark text on the yellow background)
+    private static void styleCardText(Label name, Label info, boolean selected) {
+        String colour = selected ? BG : TEXT;
+        name.setStyle("-fx-text-fill: " + colour + "; -fx-font-size: 14px; -fx-font-weight: bold;");
+        info.setStyle("-fx-text-fill: " + colour + "; -fx-font-size: 12px;");
     }
 
     private static Button button(String text, Runnable action) {

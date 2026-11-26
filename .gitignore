@@ -1,1 +1,11 @@
 *.class
+out/
+
+# Gradle's build output and cache (the wrapper files in gradle/wrapper ARE committed)
+build/
+.gradle/
+
+# Editor files
+.idea/
+.vscode/
+*.iml

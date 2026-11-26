@@ -1,0 +1,37 @@
+plugins {
+    // 'application' adds the `run` task and lets us say which class has main()
+    id 'application'
+    // Downloads JavaFX for the user's OS and adds the --module-path flags for us
+    id 'org.openjfx.javafxplugin' version '0.1.0'
+}
+
+repositories {
+    // Where Gradle downloads JavaFX from
+    mavenCentral()
+}
+
+java {
+    toolchain {
+        // Compile for Java 21. If you change this, everyone needs that version or newer.
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+javafx {
+    version = '21.0.5'
+    modules = ['javafx.controls']
+}
+
+application {
+    // `./gradlew run` starts the game window
+    mainClass = 'UIController'
+}
+
+// `./gradlew runServer` starts the game server
+tasks.register('runServer', JavaExec) {
+    group = 'application'
+    description = 'Starts the BigBattleShips server on port 1234.'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'Server'
+    standardInput = System.in
+}
